@@ -35,4 +35,5 @@ def unknown(conn, args):
     '''
     Represents the unknown command handler.
     '''
-    pass
+    conn.settimeout(1)
+    conn.send(f'error: unknown command \'{" ".join(args)}\''.encode())

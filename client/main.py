@@ -35,15 +35,15 @@ def main():
                 break
 
             if args[0] == 'echo':
-                command.echo(sock, args)
+                command.echo(sock)
             elif args[0] == 'time':
-                command.time(sock, args)
+                command.time(sock)
             elif args[0] == 'upload':
                 command.upload(sock, args)
             elif args[0] == 'download':
                 command.download(sock, args)
             else:
-                command.unknown(sock, args)
+                command.unknown(sock)
     except ConnectionRefusedError:
         print('error: connection refused', file=sys.stderr)
         sys.exit(1)

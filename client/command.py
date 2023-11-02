@@ -1,13 +1,13 @@
 import sys
 
-def echo(sock, args):
+def echo(sock):
     '''
     Represents the `echo` command handler.
     '''
     sock.settimeout(1)
     print(sock.recv(1024).decode())
 
-def time(sock, args):
+def time(sock):
     '''
     Represents the `time` command handler.
     '''
@@ -31,8 +31,9 @@ def download(sock, args):
     '''
     pass
 
-def unknown(sock, args):
+def unknown(sock):
     '''
     Represents the unknown command handler.
     '''
-    pass
+    sock.settimeout(1)
+    print(sock.recv(1024).decode())
