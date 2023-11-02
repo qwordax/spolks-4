@@ -29,7 +29,7 @@ def main():
             if args == []:
                 continue
 
-            sock.settimeout(1)
+            sock.settimeout(timeout.COMMAND_SEND)
             sock.send(' '.join(args).encode())
 
             if args[0] == 'quit':
