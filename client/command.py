@@ -14,8 +14,8 @@ def time(sock):
     sock.settimeout(1)
     response = sock.recv(1024).decode()
 
-    if response == 'usage: time':
-        print(response, sys.stderr)
+    if response == 'usage':
+        print('usage: time', sys.stderr)
     else:
         print(response)
 
@@ -31,9 +31,12 @@ def download(sock, args):
     '''
     pass
 
-def unknown(sock):
+def unknown(sock, args):
     '''
     Represents the unknown command handler.
     '''
     sock.settimeout(1)
-    print(sock.recv(1024).decode())
+    response = sock.recv(1024).decode()
+
+    if response == 'unknown':
+        print(f'error: unknown command \'{" ".join(args)}\'', file=sys.stderr)

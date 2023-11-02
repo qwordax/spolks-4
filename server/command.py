@@ -12,7 +12,7 @@ def time(conn, args):
     Represents the `time` command handler.
     '''
     if len(args) != 1:
-        response = 'usage: time'
+        response = 'usage'
     else:
         response = time.ctime()
 
@@ -31,9 +31,9 @@ def download(conn, args):
     '''
     pass
 
-def unknown(conn, args):
+def unknown(conn):
     '''
     Represents the unknown command handler.
     '''
     conn.settimeout(1)
-    conn.send(f'error: unknown command \'{" ".join(args)}\''.encode())
+    conn.send('unknown'.encode())
