@@ -1,17 +1,19 @@
 import sys
 
+import timeout
+
 def echo(sock):
     '''
     Represents the `echo` command handler.
     '''
-    sock.settimeout(1)
+    sock.settimeout(timeout.COMMAND_RECV)
     print(sock.recv(1024).decode())
 
 def time(sock):
     '''
     Represents the `time` command handler.
     '''
-    sock.settimeout(1)
+    sock.settimeout(timeout.COMMAND_RECV)
     response = sock.recv(1024).decode()
 
     if response == 'usage':
@@ -35,7 +37,7 @@ def unknown(sock, args):
     '''
     Represents the unknown command handler.
     '''
-    sock.settimeout(1)
+    sock.settimeout(timeout.COMMAND_RECV)
     response = sock.recv(1024).decode()
 
     if response == 'unknown':

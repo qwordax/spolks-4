@@ -3,6 +3,7 @@ import socket
 import sys
 
 import command
+import timeout
 
 def main():
     '''
@@ -19,7 +20,7 @@ def main():
     atexit.register(sock.close)
 
     try:
-        sock.settimeout(5)
+        sock.settimeout(timeout.CONNECT)
         sock.connect((address, port))
 
         while True:
