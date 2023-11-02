@@ -2,6 +2,8 @@ import atexit
 import socket
 import sys
 
+import command
+
 N_MIN = 1
 '''
 The minimum number of threads.
@@ -14,7 +16,7 @@ The maximum number of threads.
 
 def handle():
     '''
-    Represents the handler of the connection.
+    Represents the connection handler.
     '''
     pass
 
