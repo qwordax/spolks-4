@@ -2,7 +2,8 @@ def echo(conn, args):
     '''
     Represents the `echo` command handler.
     '''
-    pass
+    conn.settimeout(1)
+    conn.send(('\n'.join(args[1:])).encode())
 
 def time(conn, args):
     '''

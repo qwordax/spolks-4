@@ -28,6 +28,9 @@ def main():
             if args == []:
                 continue
 
+            sock.settimeout(1)
+            sock.send(' '.join(args).encode())
+
             if args[0] == 'quit':
                 break
 
