@@ -1,14 +1,14 @@
 CONNECT = 5
 '''
-Defines a connection timeout in seconds.
+Defines the timeout of the connection in seconds.
 '''
 
 COMMAND_SEND = 3
 '''
-Defines a command send timeout in seconds.
+Defines the timeout of the command send in seconds.
 '''
 
 COMMAND_RECV = 3
 '''
-Defines a command receive timeout in seconds.
+Defines the timeout of the command receive in seconds.
 '''

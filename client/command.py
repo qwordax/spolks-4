@@ -5,14 +5,14 @@ import timeout
 
 def echo(sock):
     '''
-    Represents an `echo` command handler.
+    Represents the handler of the `echo` command.
     '''
     sock.settimeout(timeout.COMMAND_RECV)
     print(sock.recv(length.COMMAND).decode(), end='')
 
 def time(sock):
     '''
-    Represents a `time` command handler.
+    Represents the handler of the `time` command.
     '''
     sock.settimeout(timeout.COMMAND_RECV)
     response = sock.recv(length.COMMAND).decode()
@@ -24,19 +24,19 @@ def time(sock):
 
 def upload(sock, args):
     '''
-    Represents an `upload` command handler.
+    Represents the handler of the `upload` command.
     '''
     pass
 
 def download(sock, args):
     '''
-    Represents a `download` command handler.
+    Represents the handler of the `download` command.
     '''
     pass
 
 def unknown(sock, args):
     '''
-    Represents an unknown command handler.
+    Represents the handler of unknown commands.
     '''
     sock.settimeout(timeout.COMMAND_RECV)
     response = sock.recv(length.COMMAND).decode()
