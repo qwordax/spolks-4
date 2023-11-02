@@ -7,7 +7,7 @@ def echo(sock):
     Represents an `echo` command handler.
     '''
     sock.settimeout(timeout.COMMAND_RECV)
-    print(sock.recv(1024).decode())
+    print(sock.recv(1024).decode(), end='')
 
 def time(sock):
     '''
