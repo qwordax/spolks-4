@@ -1,4 +1,5 @@
 import atexit
+import multiprocessing as proc
 import socket
 import sys
 
@@ -36,6 +37,8 @@ def main():
 
     sock.bind((address, port))
     sock.listen(N_MAX)
+
+    proc.freeze_support()
 
 if __name__ == '__main__':
     main()
