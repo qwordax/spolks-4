@@ -1,5 +1,7 @@
 **/__pycache__
 
+*.lock
+
 *.exe
 *.jpg
 *.png
