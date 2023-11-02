@@ -1,3 +1,5 @@
+import sys
+
 def echo(sock, args):
     '''
     Represents the `echo` command handler.
@@ -9,7 +11,13 @@ def time(sock, args):
     '''
     Represents the `time` command handler.
     '''
-    pass
+    sock.settimeout(1)
+    response = sock.recv(1024).decode()
+
+    if response == 'usage: time':
+        print(response, sys.stderr)
+    else:
+        print(response)
 
 def upload(sock, args):
     '''

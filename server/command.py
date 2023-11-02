@@ -1,3 +1,5 @@
+import time
+
 def echo(conn, args):
     '''
     Represents the `echo` command handler.
@@ -9,7 +11,13 @@ def time(conn, args):
     '''
     Represents the `time` command handler.
     '''
-    pass
+    if len(args) != 1:
+        response = 'usage: time'
+    else:
+        response = time.ctime()
+
+    conn.settimeout(1)
+    conn.send(response.encode())
 
 def upload(conn, args):
     '''
