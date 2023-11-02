@@ -2,6 +2,8 @@ import atexit
 import socket
 import sys
 
+import command
+
 def main():
     '''
     The main function of the program.
@@ -28,11 +30,22 @@ def main():
 
             if args[0] == 'quit':
                 break
+
+            if args[0] == 'echo':
+                command.echo(sock, args)
+            elif args[0] == 'time':
+                command.time(sock, args)
+            elif args[0] == 'upload':
+                command.upload(sock, args)
+            elif args[0] == 'download':
+                command.download(sock, args)
+            else:
+                command.unknown(sock, args)
     except ConnectionRefusedError:
         print('error: connection refused', file=sys.stderr)
         sys.exit(1)
     except TimeoutError:
-        print('error: timeout', file=sys.stderr)
+        print('error: timeout expired', file=sys.stderr)
         sys.exit(1)
 
 if __name__ == '__main__':
