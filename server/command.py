@@ -2,14 +2,14 @@ import time
 
 def echo(conn, args):
     '''
-    Represents the `echo` command handler.
+    Represents an `echo` command handler.
     '''
     conn.settimeout(1)
     conn.send(('\n'.join(args[1:])).encode())
 
 def time(conn, args):
     '''
-    Represents the `time` command handler.
+    Represents a `time` command handler.
     '''
     if len(args) != 1:
         response = 'usage'
@@ -21,19 +21,19 @@ def time(conn, args):
 
 def upload(conn, args):
     '''
-    Represents the `upload` command handler.
+    Represents an `upload` command handler.
     '''
     pass
 
 def download(conn, args):
     '''
-    Represents the `download` command handler.
+    Represents a `download` command handler.
     '''
     pass
 
 def unknown(conn):
     '''
-    Represents the unknown command handler.
+    Represents an unknown command handler.
     '''
     conn.settimeout(1)
     conn.send('unknown'.encode())

@@ -7,17 +7,17 @@ import command
 
 N_MIN = 1
 '''
-The minimum number of threads.
+Defines a minimum number of threads.
 '''
 
 N_MAX = 3
 '''
-The maximum number of threads.
+Defines a maximum number of threads.
 '''
 
 def handle():
     '''
-    Represents the connection handler.
+    Represents a connection handler.
     '''
     pass
 
