@@ -1,10 +1,12 @@
-import time
+import time as ctime
+
+import timeout
 
 def echo(conn, args):
     '''
     Represents an `echo` command handler.
     '''
-    conn.settimeout(1)
+    conn.settimeout(timeout.COMMAND_SEND)
     conn.send(('\n'.join(args[1:])+'\n').encode())
 
 def time(conn, args):
@@ -14,9 +16,9 @@ def time(conn, args):
     if len(args) != 1:
         response = 'usage'
     else:
-        response = time.ctime()
+        response = ctime.ctime()
 
-    conn.settimeout(1)
+    conn.settimeout(timeout.COMMAND_SEND)
     conn.send(response.encode())
 
 def upload(conn, args):
@@ -35,5 +37,5 @@ def unknown(conn):
     '''
     Represents an unknown command handler.
     '''
-    conn.settimeout(1)
+    conn.settimeout(timeout.COMMAND_SEND)
     conn.send('unknown'.encode())
