@@ -18,7 +18,7 @@ def time(sock):
     response = sock.recv(length.COMMAND).decode()
 
     if response == 'usage':
-        print('usage: time', sys.stderr)
+        print('usage: time', file=sys.stderr)
     else:
         print(response)
 
