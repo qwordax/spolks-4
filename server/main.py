@@ -22,7 +22,7 @@ The maximum number of threads.
 
 DELAY = 0.5
 '''
-
+Specifies a delay before checking process activity.
 '''
 
 def handle(sock, working):
@@ -46,6 +46,8 @@ def handle(sock, working):
                 break
         except TimeoutError:
             log.warning('timeout expired')
+        except KeyboardInterrupt:
+            return
 
     log.info('%s:%d connected' % address)
 
@@ -99,7 +101,7 @@ def main():
     sock.bind((address, port))
     sock.listen(N_MAX)
 
-    # Necessary for processes to work properly.
+    # Necessary for properly process executing.
     proc.freeze_support()
 
     # Shared variable to indicate server working.
@@ -127,6 +129,8 @@ def main():
     # Terminating processes.
     for p in process_list:
         p.terminate()
+        log.info('terminate process')
+
         p.join()
 
     log.info('closing . . .')
