@@ -12,12 +12,12 @@ import timeout
 
 N_MIN = 3
 '''
-The minimum number of threads.
+The minimum number of processes.
 '''
 
 N_MAX = 5
 '''
-The maximum number of threads.
+The maximum number of processes.
 '''
 
 DELAY = 0.5
@@ -25,7 +25,7 @@ DELAY = 0.5
 Specifies a delay before checking process activity.
 '''
 
-def handle(sock, working):
+def handle(index, sock, status_list, working):
     '''
     Represents the handler of connections.
     '''
@@ -99,7 +99,7 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     sock.bind((address, port))
-    sock.listen(N_MAX)
+    sock.listen(1)
 
     # Necessary for properly process executing.
     proc.freeze_support()
@@ -107,13 +107,19 @@ def main():
     # Shared variable to indicate server working.
     working = proc.Value('b', 1)
 
+    # Shared array to indicate process working.
+    status_list = proc.Array('b', N_MAX)
+
+    for i in range(N_MAX):
+        status_list[i] = 0
+
     # The list of processes that handle connections.
     process_list = []
 
-    for _ in range(N_MIN):
+    for i in range(N_MIN):
         process_list.append(proc.Process(
             target=handle,
-            args=(sock.dup(), working)
+            args=(i, sock.dup(), status_list, working)
         ))
 
     for p in process_list:
