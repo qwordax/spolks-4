@@ -1,28 +1,13 @@
-import atexit
 import socket
 import sys
 
 import command
 import timeout
 
-sock: socket.socket
-'''
-The main socket of the client.
-'''
-
-@atexit.register
-def clear():
-    '''
-    Clears the data at program exit.
-    '''
-    sock.close()
-
 def main():
     '''
     The main function of the program.
     '''
-    global sock
-
     if len(sys.argv) != 3:
         print('usage: %s <address> <port>' % sys.argv[0], file=sys.stderr)
         sys.exit(1)
@@ -31,6 +16,8 @@ def main():
     port = int(sys.argv[2])
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    status = 0
 
     try:
         sock.settimeout(timeout.CONNECT)
@@ -58,12 +45,19 @@ def main():
                 command.download(sock, args)
             else:
                 command.unknown(sock, args)
+    except ConnectionAbortedError:
+        print('error: connection aborted', file=sys.stderr)
+        status = 1
     except ConnectionRefusedError:
         print('error: connection refused', file=sys.stderr)
-        sys.exit(1)
+        status = 1
     except TimeoutError:
         print('error: timeout expired', file=sys.stderr)
-        sys.exit(1)
+        status = 1
+
+    sock.close()
+
+    sys.exit(status)
 
 if __name__ == '__main__':
     main()
