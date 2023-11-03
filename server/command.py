@@ -1,17 +1,19 @@
+import socket
 import time as ctime
 
+import length
 import timeout
 
 def echo(conn, args):
     '''
-    Represents an `echo` command handler.
+    Represents the handler of the `echo` command.
     '''
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send(('\n'.join(args[1:])+'\n').encode())
 
 def time(conn, args):
     '''
-    Represents a `time` command handler.
+    Represents the handler of the `time` command.
     '''
     if len(args) != 1:
         response = 'usage'
@@ -23,19 +25,55 @@ def time(conn, args):
 
 def upload(conn, args):
     '''
-    Represents an `upload` command handler.
+    Represents the handler of the `upload` command.
     '''
-    pass
+    if len(args) != 2:
+        response = 'usage'
+    else:
+        response = 'ok'
+
+    conn.settimeout(timeout.COMMAND_SEND)
+    conn.send(response.encode())
+
+    conn.settimeout(timeout.COMMAND_RECV)
+
+    if conn.recv(length.COMMAND).decode() == 'not exists':
+        return
+
+    conn.settimeout(timeout.COMMAND_RECV)
+    file_info = conn.recv(length.COMMAND).decode().split()
+
+    file_name = file_info[0]
+    file_size = int(file_info[1])
+
+    with open(file_name, 'wb') as file:
+        i = 0
+        oob = file_size // length.FILE
+
+        size = 0
+        oob_size = 0
+
+        while (size+oob_size) < file_size:
+            if i < oob:
+                conn.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 1)
+                conn.settimeout(timeout.FILE_RECV)
+                oob_size += file.write(conn.recv(length.FILE))
+                conn.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 0)
+            else:
+                conn.settimeout(timeout.FILE_RECV)
+                size += file.write(conn.recv(length.FILE))
+
+            i += 1
 
 def download(conn, args):
     '''
-    Represents a `download` command handler.
+    Represents the handler of the `download` command.
     '''
     pass
 
 def unknown(conn):
     '''
-    Represents an unknown command handler.
+    Represents the handler of unknown commands.
     '''
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send('unknown'.encode())

@@ -1,3 +1,5 @@
+import os
+import socket
 import sys
 
 import length
@@ -26,7 +28,52 @@ def upload(sock, args):
     '''
     Represents the handler of the `upload` command.
     '''
-    pass
+    sock.settimeout(timeout.COMMAND_RECV)
+
+    if sock.recv(length.COMMAND).decode() == 'usage':
+        print('usage: upload <file>', file=sys.stderr)
+        return
+
+    if not os.path.exists(args[1]):
+        sock.settimeout(timeout.COMMAND_SEND)
+        sock.send('not exists'.encode())
+
+        print('error: \'%s\' does not exists' % args[1], file=sys.stderr)
+        return
+
+    sock.settimeout(timeout.COMMAND_SEND)
+    sock.send('exists'.encode())
+
+    file_name = args[1]
+    file_size = os.path.getsize(args[1])
+
+    file_info = file_name+' '+str(file_size)
+
+    sock.settimeout(timeout.COMMAND_SEND)
+    sock.send(file_info.encode())
+
+    with open(file_name, 'rb') as file:
+        i = 0
+        oob = file_size // length.FILE
+
+        size = 0
+        oob_size = 0
+
+        for data in iter(lambda: file.read(length.FILE), b''):
+            if i < oob:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 1)
+                sock.settimeout(timeout.FILE_SEND)
+                sock.send(data)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 0)
+
+                oob_size += len(data)
+            else:
+                sock.settimeout(timeout.FILE_SEND)
+                sock.send(data)
+
+                size += len(data)
+
+            i += 1
 
 def download(sock, args):
     '''
