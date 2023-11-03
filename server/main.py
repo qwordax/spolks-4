@@ -23,19 +23,19 @@ def handle(sock):
     '''
     Represents the handler of connections.
     '''
-    try:
-        with filelock.FileLock('file.lock'):
-            log.info('accepting . . .')
+    while True:
+        try:
+            with filelock.FileLock('file.lock'):
+                log.info('accepting . . .')
 
-            sock.settimeout(timeout.CONNECT)
-            conn, address = sock.accept()
+                sock.settimeout(timeout.CONNECT)
+                conn, address = sock.accept()
 
-            log.info('%s:%d connected' % address)
-    except TimeoutError:
-        log.warning('timeout expired')
-        return 1
+                break
+        except TimeoutError:
+            log.warning('timeout expired')
 
-    status = 0
+    log.info('%s:%d connected' % address)
 
     try:
         while True:
@@ -57,12 +57,10 @@ def handle(sock):
                 command.unknown(conn, address, args)
     except ConnectionResetError:
         log.critical('%s:%d connection reset' % address)
-        status = 1
     except TimeoutError:
         log.error('%s:%d timeout expired' % address)
-        status = 1
 
-    return status
+    log.info('%s:%d disconnected' % address)
 
 def main():
     '''
@@ -91,12 +89,12 @@ def main():
     # Necessary for processes to work properly.
     proc.freeze_support()
 
-    status = handle(sock)
+    handle(sock)
 
     log.info('closing . . .')
     sock.close()
 
-    sys.exit(status)
+    sys.exit(0)
 
 if __name__ == '__main__':
     main()
