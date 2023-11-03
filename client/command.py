@@ -54,7 +54,7 @@ def upload(sock, args):
 
     with open(file_name, 'rb') as file:
         i = 0
-        oob = file_size // length.FILE
+        oob = file_size//length.FILE // 4
 
         size = 0
         oob_size = 0
@@ -73,7 +73,12 @@ def upload(sock, args):
 
                 size += len(data)
 
+            if i%length.FILE == 0:
+                print(f'{int(100 * (size+oob_size) / file_size):3d} %')
+
             i += 1
+
+        print(f'sent {size:,.0f} + {oob_size:,.0f} bytes')
 
 def download(sock, args):
     '''
@@ -99,7 +104,7 @@ def download(sock, args):
 
     with open(file_name, 'wb') as file:
         i = 0
-        oob = file_size // length.FILE
+        oob = file_size//length.FILE // 4
 
         size = 0
         oob_size = 0
@@ -114,7 +119,12 @@ def download(sock, args):
                 sock.settimeout(timeout.FILE_RECV)
                 size += file.write(sock.recv(length.FILE))
 
+            if i%length.FILE == 0:
+                print(f'{int(100 * (size+oob_size) / file_size):3d} %')
+
             i += 1
+
+        print(f'received {size:,.0f} + {oob_size:,.0f} bytes')
 
 def unknown(sock, args):
     '''

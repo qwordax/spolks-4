@@ -1,5 +1,6 @@
 import filelock
 
+import logging as log
 import multiprocessing as proc
 import socket
 import sys
@@ -24,9 +25,14 @@ def handle(sock):
     '''
     try:
         with filelock.FileLock('file.lock'):
+            log.info('accepting . . .')
+
             sock.settimeout(timeout.CONNECT)
             conn, address = sock.accept()
+
+            log.info('%s:%d connected' % address)
     except TimeoutError:
+        log.warning('timeout expired')
         return 1
 
     status = 0
@@ -40,16 +46,20 @@ def handle(sock):
                 break
 
             if args[0] == 'echo':
-                command.echo(conn, args)
+                command.echo(conn, address, args)
             elif args[0] == 'time':
-                command.time(conn, args)
+                command.time(conn, address, args)
             elif args[0] == 'upload':
-                command.upload(conn, args)
+                command.upload(conn, address, args)
             elif args[0] == 'download':
-                command.download(conn, args)
+                command.download(conn, address, args)
             else:
-                command.unknown(conn)
+                command.unknown(conn, address, args)
+    except ConnectionResetError:
+        log.critical('%s:%d connection reset' % address)
+        status = 1
     except TimeoutError:
+        log.error('%s:%d timeout expired' % address)
         status = 1
 
     return status
@@ -59,6 +69,12 @@ def main():
     The main function of the program.
     '''
     global sock
+
+    # Logging configuration.
+    log.basicConfig(
+        level=log.INFO,
+        format='%(levelname)-8s | %(message)s'
+    )
 
     if len(sys.argv) != 3:
         print('usage: %s <address> <port>' % sys.argv[0], file=sys.stderr)
@@ -72,10 +88,12 @@ def main():
     sock.bind((address, port))
     sock.listen(N_MAX)
 
+    # Necessary for processes to work properly.
     proc.freeze_support()
 
     status = handle(sock)
 
+    log.info('closing . . .')
     sock.close()
 
     sys.exit(status)

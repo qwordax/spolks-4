@@ -1,3 +1,4 @@
+import logging as log
 import os
 import socket
 import time as ctime
@@ -5,17 +6,21 @@ import time as ctime
 import length
 import timeout
 
-def echo(conn, args):
+def echo(conn, address, args):
     '''
     Represents the handler of the `echo` command.
     '''
+    log.info('%s:%d %s' % (address + (' '.join(args),)))
+
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send(('\n'.join(args[1:])+'\n').encode())
 
-def time(conn, args):
+def time(conn, address, args):
     '''
     Represents the handler of the `time` command.
     '''
+    log.info('%s:%d %s' % (address + (' '.join(args),)))
+
     if len(args) != 1:
         response = 'usage'
     else:
@@ -24,10 +29,12 @@ def time(conn, args):
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send(response.encode())
 
-def upload(conn, args):
+def upload(conn, address, args):
     '''
     Represents the handler of the `upload` command.
     '''
+    log.info('%s:%d %s' % (address + (' '.join(args),)))
+
     if len(args) != 2:
         conn.settimeout(timeout.COMMAND_SEND)
         conn.send('usage'.encode())
@@ -48,7 +55,7 @@ def upload(conn, args):
 
     with open(file_name, 'wb') as file:
         i = 0
-        oob = file_size // length.FILE
+        oob = file_size//length.FILE // 4
 
         size = 0
         oob_size = 0
@@ -63,12 +70,19 @@ def upload(conn, args):
                 conn.settimeout(timeout.FILE_RECV)
                 size += file.write(conn.recv(length.FILE))
 
+            if i%length.FILE == 0:
+                log.info(f'{int(100 * (size+oob_size) / file_size):3d} %')
+
             i += 1
 
-def download(conn, args):
+        log.info(f'received {size:,.0f} + {oob_size:,.0f} bytes')
+
+def download(conn, address, args):
     '''
     Represents the handler of the `download` command.
     '''
+    log.info('%s:%d %s' % (address + (' '.join(args),)))
+
     if len(args) != 2:
         conn.settimeout(timeout.COMMAND_SEND)
         conn.send('usage'.encode())
@@ -97,7 +111,7 @@ def download(conn, args):
 
     with open(file_name, 'rb') as file:
         i = 0
-        oob = file_size // length.FILE
+        oob = file_size//length.FILE // 4
 
         size = 0
         oob_size = 0
@@ -116,11 +130,18 @@ def download(conn, args):
 
                 size += len(data)
 
+            if i%length.FILE == 0:
+                log.info(f'{int(100 * (size+oob_size) / file_size):3d} %')
+
             i += 1
 
-def unknown(conn):
+        log.info(f'sent {size:,.0f} + {oob_size:,.0f} bytes')
+
+def unknown(conn, address, args):
     '''
     Represents the handler of unknown commands.
     '''
+    log.warning('%s:%d %s' % (address + (' '.join(args),)))
+
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send('unknown'.encode())

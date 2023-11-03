@@ -54,6 +54,9 @@ def main():
     except TimeoutError:
         print('error: timeout expired', file=sys.stderr)
         status = 1
+    except KeyboardInterrupt:
+        print('error: interrupt', file=sys.stderr)
+        status = 1
 
     sock.close()
 
