@@ -51,6 +51,9 @@ def main():
     except ConnectionRefusedError:
         print('error: connection refused', file=sys.stderr)
         status = 1
+    except ConnectionResetError:
+        print('error: connection reset', file=sys.stderr)
+        status = 1
     except TimeoutError:
         print('error: timeout expired', file=sys.stderr)
         status = 1

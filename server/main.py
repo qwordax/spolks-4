@@ -4,25 +4,37 @@ import logging as log
 import multiprocessing as proc
 import socket
 import sys
+import time
 
 import command
 import length
 import timeout
 
-N_MIN = 1
+N_MIN = 3
 '''
 The minimum number of threads.
 '''
 
-N_MAX = 3
+N_MAX = 5
 '''
 The maximum number of threads.
 '''
 
-def handle(sock):
+DELAY = 0.5
+'''
+
+'''
+
+def handle(sock, working):
     '''
     Represents the handler of connections.
     '''
+    # Logging configuration.
+    log.basicConfig(
+        level=log.INFO,
+        format='%(levelname)-8s | %(message)s'
+    )
+
     while True:
         try:
             with filelock.FileLock('file.lock'):
@@ -43,6 +55,7 @@ def handle(sock):
             args = conn.recv(length.COMMAND).decode().split()
 
             if args[0] == 'quit':
+                working.value = 0
                 break
 
             if args[0] == 'echo':
@@ -56,7 +69,7 @@ def handle(sock):
             else:
                 command.unknown(conn, address, args)
     except ConnectionResetError:
-        log.critical('%s:%d connection reset' % address)
+        log.error('%s:%d connection reset' % address)
     except TimeoutError:
         log.error('%s:%d timeout expired' % address)
 
@@ -89,7 +102,32 @@ def main():
     # Necessary for processes to work properly.
     proc.freeze_support()
 
-    handle(sock)
+    # Shared variable to indicate server working.
+    working = proc.Value('b', 1)
+
+    # The list of processes that handle connections.
+    process_list = []
+
+    for _ in range(N_MIN):
+        process_list.append(proc.Process(
+            target=handle,
+            args=(sock.dup(), working)
+        ))
+
+    for p in process_list:
+        p.start()
+        log.info('start process')
+
+    try:
+        while working.value:
+            time.sleep(DELAY)
+    except KeyboardInterrupt:
+        log.critical('interrupt')
+
+    # Terminating processes.
+    for p in process_list:
+        p.terminate()
+        p.join()
 
     log.info('closing . . .')
     sock.close()
