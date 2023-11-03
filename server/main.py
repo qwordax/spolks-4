@@ -1,6 +1,5 @@
 import filelock
 
-import atexit
 import multiprocessing as proc
 import socket
 import sys
@@ -19,12 +18,7 @@ N_MAX = 3
 The maximum number of threads.
 '''
 
-sock: socket.socket
-'''
-The main socket of the server.
-'''
-
-def handle():
+def handle(sock):
     '''
     Represents the handler of connections.
     '''
@@ -33,32 +27,32 @@ def handle():
             sock.settimeout(timeout.CONNECT)
             conn, address = sock.accept()
     except TimeoutError:
-        return
+        return 1
 
-    while True:
-        conn.settimeout(timeout.COMMAND_RECV)
-        args = conn.recv(length.COMMAND).decode().split()
+    status = 0
 
-        if args[0] == 'quit':
-            break
+    try:
+        while True:
+            conn.settimeout(timeout.COMMAND_RECV)
+            args = conn.recv(length.COMMAND).decode().split()
 
-        if args[0] == 'echo':
-            command.echo(conn, args)
-        elif args[0] == 'time':
-            command.time(conn, args)
-        elif args[0] == 'upload':
-            command.upload(conn, args)
-        elif args[0] == 'download':
-            command.download(conn, args)
-        else:
-            command.unknown(conn)
+            if args[0] == 'quit':
+                break
 
-@atexit.register
-def clear():
-    '''
-    Clears the data at program exit.
-    '''
-    sock.close()
+            if args[0] == 'echo':
+                command.echo(conn, args)
+            elif args[0] == 'time':
+                command.time(conn, args)
+            elif args[0] == 'upload':
+                command.upload(conn, args)
+            elif args[0] == 'download':
+                command.download(conn, args)
+            else:
+                command.unknown(conn)
+    except TimeoutError:
+        status = 1
+
+    return status
 
 def main():
     '''
@@ -80,7 +74,11 @@ def main():
 
     proc.freeze_support()
 
-    handle()
+    status = handle(sock)
+
+    sock.close()
+
+    sys.exit(status)
 
 if __name__ == '__main__':
     main()
