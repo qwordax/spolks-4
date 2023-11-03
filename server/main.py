@@ -10,7 +10,7 @@ import command
 import length
 import timeout
 
-N_MIN = 3
+N_MIN = 2
 '''
 The minimum number of processes.
 '''
@@ -25,7 +25,7 @@ DELAY = 0.5
 Specifies a delay before checking process activity.
 '''
 
-def handle(index, sock, status_list, working):
+def handle(sock, working):
     '''
     Represents the handler of connections.
     '''
@@ -56,8 +56,11 @@ def handle(index, sock, status_list, working):
             conn.settimeout(timeout.COMMAND_RECV)
             args = conn.recv(length.COMMAND).decode().split()
 
-            if args[0] == 'quit':
+            if args[0] == 'close':
                 working.value = 0
+                break
+
+            if args[0] == 'quit':
                 break
 
             if args[0] == 'echo':
@@ -107,19 +110,13 @@ def main():
     # Shared variable to indicate server working.
     working = proc.Value('b', 1)
 
-    # Shared array to indicate process working.
-    status_list = proc.Array('b', N_MAX)
-
-    for i in range(N_MAX):
-        status_list[i] = 0
-
     # The list of processes that handle connections.
     process_list = []
 
     for i in range(N_MIN):
         process_list.append(proc.Process(
             target=handle,
-            args=(i, sock.dup(), status_list, working)
+            args=(sock.dup(), working)
         ))
 
     for p in process_list:
