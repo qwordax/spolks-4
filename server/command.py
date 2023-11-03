@@ -1,3 +1,4 @@
+import os
 import socket
 import time as ctime
 
@@ -28,12 +29,11 @@ def upload(conn, args):
     Represents the handler of the `upload` command.
     '''
     if len(args) != 2:
-        response = 'usage'
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('usage'.encode())
     else:
-        response = 'ok'
-
-    conn.settimeout(timeout.COMMAND_SEND)
-    conn.send(response.encode())
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('ok'.encode())
 
     conn.settimeout(timeout.COMMAND_RECV)
 
@@ -69,7 +69,54 @@ def download(conn, args):
     '''
     Represents the handler of the `download` command.
     '''
-    pass
+    if len(args) != 2:
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('usage'.encode())
+
+        return
+    else:
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('ok'.encode())
+
+    if not os.path.exists(args[1]):
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('not exists'.encode())
+
+        return
+    else:
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('exists'.encode())
+
+    file_name = args[1]
+    file_size = os.path.getsize(args[1])
+
+    file_info = file_name+' '+str(file_size)
+
+    conn.settimeout(timeout.COMMAND_SEND)
+    conn.send(file_info.encode())
+
+    with open(file_name, 'rb') as file:
+        i = 0
+        oob = file_size // length.FILE
+
+        size = 0
+        oob_size = 0
+
+        for data in iter(lambda: file.read(length.FILE), b''):
+            if i < oob:
+                conn.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 1)
+                conn.settimeout(timeout.FILE_SEND)
+                conn.send(data)
+                conn.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 0)
+
+                oob_size += len(data)
+            else:
+                conn.settimeout(timeout.FILE_SEND)
+                conn.send(data)
+
+                size += len(data)
+
+            i += 1
 
 def unknown(conn):
     '''

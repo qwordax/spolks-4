@@ -40,9 +40,9 @@ def upload(sock, args):
 
         print('error: \'%s\' does not exists' % args[1], file=sys.stderr)
         return
-
-    sock.settimeout(timeout.COMMAND_SEND)
-    sock.send('exists'.encode())
+    else:
+        sock.settimeout(timeout.COMMAND_SEND)
+        sock.send('exists'.encode())
 
     file_name = args[1]
     file_size = os.path.getsize(args[1])
@@ -79,7 +79,42 @@ def download(sock, args):
     '''
     Represents the handler of the `download` command.
     '''
-    pass
+    sock.settimeout(timeout.COMMAND_RECV)
+
+    if sock.recv(length.COMMAND).decode() == 'usage':
+        print('usage: download <file>', file=sys.stderr)
+        return
+
+    sock.settimeout(timeout.COMMAND_RECV)
+
+    if sock.recv(length.COMMAND).decode() == 'not exists':
+        print('error: \'%s\' does not exists' % args[1], file=sys.stderr)
+        return
+
+    sock.settimeout(timeout.COMMAND_RECV)
+    file_info = sock.recv(length.COMMAND).decode().split()
+
+    file_name = file_info[0]
+    file_size = int(file_info[1])
+
+    with open(file_name, 'wb') as file:
+        i = 0
+        oob = file_size // length.FILE
+
+        size = 0
+        oob_size = 0
+
+        while (size+oob_size) < file_size:
+            if i < oob:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 1)
+                sock.settimeout(timeout.FILE_RECV)
+                oob_size += file.write(sock.recv(length.FILE))
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 0)
+            else:
+                sock.settimeout(timeout.FILE_RECV)
+                size += file.write(sock.recv(length.FILE))
+
+            i += 1
 
 def unknown(sock, args):
     '''
