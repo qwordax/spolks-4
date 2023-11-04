@@ -32,7 +32,7 @@ def main():
             sock.settimeout(timeout.COMMAND_SEND)
             sock.send(' '.join(args).encode())
 
-            if args[0] == 'close' or args[0] == 'quit':
+            if args[0] == 'close' or args[0] == 'exit' or args[0] == 'quit':
                 break
 
             if args[0] == 'echo':

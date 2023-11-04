@@ -55,7 +55,7 @@ def handle(sock, count, status, working):
                 working.value = 0
                 break
 
-            if args[0] == 'quit':
+            if args[0] == 'exit' or args[0] == 'quit':
                 break
 
             if args[0] == 'echo':
