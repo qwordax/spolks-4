@@ -108,14 +108,26 @@ def download(sock, args):
     file_name = file_info[0]
     file_size = int(file_info[1])
 
+    sock.settimeout(timeout.COMMAND_RECV)
+
+    if sock.recv(length.COMMAND).decode() == 'continue':
+        current_size = os.path.getsize(file_name)
+    else:
+        current_size = 0
+
+    sock.settimeout(timeout.COMMAND_SEND)
+    sock.send(str(current_size).encode())
+
     with open(file_name, 'wb') as file:
+        file.seek(current_size)
+
         i = 0
         oob = file_size//length.FILE // 4
 
         size = 0
         oob_size = 0
 
-        while (size+oob_size) < file_size:
+        while (current_size+size+oob_size) < file_size:
             if i < oob:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 1)
                 sock.settimeout(timeout.FILE_RECV)
@@ -126,7 +138,8 @@ def download(sock, args):
                 size += file.write(sock.recv(length.FILE))
 
             if i%length.FILE == 0:
-                print(f'{int(100 * (size+oob_size) / file_size):3d} %')
+                percent = 100 * (current_size+size+oob_size) / file_size
+                print(f'{int(percent):3d} %')
 
             i += 1
 

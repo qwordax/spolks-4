@@ -143,7 +143,40 @@ def download(conn, address, args, fatal):
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send(file_info.encode())
 
+    # Read information about last client.
+    with filelock.FileLock('last.lock'):
+        try:
+            with open('last.txt', 'r') as file:
+                last_address = file.readline()
+                last_file_name = file.readline()
+
+                last_client = (last_address == address[0] and
+                               last_file_name == file_name)
+        except FileNotFoundError:
+            last_client = False
+
+    if last_client and fatal.value == 1:
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('continue'.encode())
+    else:
+        conn.settimeout(timeout.COMMAND_SEND)
+        conn.send('begin'.encode())
+
+    conn.settimeout(timeout.COMMAND_RECV)
+    current_size = int(conn.recv(length.COMMAND).decode())
+
+    with filelock.FileLock('last.lock'):
+        with open('last.txt', 'w') as file:
+            file.writelines([
+                address[0]+'\n',
+                file_name+'\n'
+            ])
+
+    fatal.value = 0
+
     with open(file_name, 'rb') as file:
+        file.seek(current_size)
+
         i = 0
         oob = file_size//length.FILE // 4
 
@@ -165,7 +198,8 @@ def download(conn, address, args, fatal):
                 size += len(data)
 
             if i%length.FILE == 0:
-                log.info(f'{int(100 * (size+oob_size) / file_size):3d} %')
+                percent = 100 * (current_size+size+oob_size) / file_size
+                log.info(f'{int(percent):3d} %')
 
             i += 1
 
