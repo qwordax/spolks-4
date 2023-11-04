@@ -1,3 +1,5 @@
+import filelock
+
 import logging as log
 import os
 import socket
@@ -29,7 +31,7 @@ def time(conn, address, args):
     conn.settimeout(timeout.COMMAND_SEND)
     conn.send(response.encode())
 
-def upload(conn, address, args):
+def upload(conn, address, args, fatal):
     '''
     Represents the handler of the `upload` command.
     '''
@@ -53,14 +55,45 @@ def upload(conn, address, args):
     file_name = file_info[0]
     file_size = int(file_info[1])
 
+    # Read information about last client.
+    with filelock.FileLock('last.lock'):
+        try:
+            with open('last.txt', 'r') as file:
+                last_address = file.readline()
+                last_file_name = file.readline()
+
+                last_client = (last_address == address[0] and
+                               last_file_name == file_name)
+        except FileNotFoundError:
+            last_client = False
+
+    if last_client and fatal.value == 1:
+        current_size = os.path.getsize(file_name)
+    else:
+        current_size = 0
+
+    conn.settimeout(timeout.COMMAND_SEND)
+    conn.send(str(current_size).encode())
+
+    with filelock.FileLock('last.lock'):
+        with open('last.txt', 'w') as file:
+            file.writelines([
+                address[0]+'\n',
+                file_name+'\n'
+            ])
+
+    fatal.value = 0
+
     with open(file_name, 'wb') as file:
+        file.seek(current_size)
+
         i = 0
         oob = file_size//length.FILE // 4
 
         size = 0
         oob_size = 0
 
-        while (size+oob_size) < file_size:
+        while (current_size+size+oob_size) < file_size:
             if i < oob:
                 conn.setsockopt(socket.SOL_SOCKET, socket.SO_OOBINLINE, 1)
                 conn.settimeout(timeout.FILE_RECV)
@@ -71,13 +104,14 @@ def upload(conn, address, args):
                 size += file.write(conn.recv(length.FILE))
 
             if i%length.FILE == 0:
-                log.info(f'{int(100 * (size+oob_size) / file_size):3d} %')
+                percent = 100 * (current_size+size+oob_size) / file_size
+                log.info(f'{int(percent):3d} %')
 
             i += 1
 
         log.info(f'received {size:,.0f} + {oob_size:,.0f} bytes')
 
-def download(conn, address, args):
+def download(conn, address, args, fatal):
     '''
     Represents the handler of the `download` command.
     '''

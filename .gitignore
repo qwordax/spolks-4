@@ -8,3 +8,6 @@
 *.rar
 *.txt
 *.zip
+
+# Contains information about last client.
+last.txt

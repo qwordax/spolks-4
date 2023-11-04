@@ -19,7 +19,7 @@ N_MAX = 5
 The maximum number of processes.
 '''
 
-def handle(sock, count, status, working):
+def handle(sock, fatal, count, status, working):
     '''
     Represents the handler of connections.
     '''
@@ -31,7 +31,7 @@ def handle(sock, count, status, working):
 
     while True:
         try:
-            with filelock.FileLock('file.lock'):
+            with filelock.FileLock('accept.lock'):
                 log.info('accepting . . .')
 
                 sock.settimeout(timeout.CONNECT)
@@ -63,9 +63,9 @@ def handle(sock, count, status, working):
             elif args[0] == 'time':
                 command.time(conn, address, args)
             elif args[0] == 'upload':
-                command.upload(conn, address, args)
+                command.upload(conn, address, args, fatal)
             elif args[0] == 'download':
-                command.download(conn, address, args)
+                command.download(conn, address, args, fatal)
             else:
                 command.unknown(conn, address, args)
     except ConnectionAbortedError:
@@ -107,6 +107,9 @@ def main():
     # Necessary for properly process executing.
     proc.freeze_support()
 
+    # Indicates process fatal termination.
+    fatal = proc.Value('b', 0)
+
     # Indicates total number of processes.
     count = proc.Value('b', 0)
 
@@ -125,7 +128,7 @@ def main():
                  count.value < N_MAX):
                 process_list.append(proc.Process(
                     target=handle,
-                    args=(sock.dup(), count, status, working)
+                    args=(sock.dup(), fatal, count, status, working)
                 ))
 
                 process_list[-1].start()

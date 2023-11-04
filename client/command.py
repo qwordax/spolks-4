@@ -52,7 +52,12 @@ def upload(sock, args):
     sock.settimeout(timeout.COMMAND_SEND)
     sock.send(file_info.encode())
 
+    sock.settimeout(timeout.COMMAND_RECV)
+    current_size = int(sock.recv(length.COMMAND).decode())
+
     with open(file_name, 'rb') as file:
+        file.seek(current_size)
+
         i = 0
         oob = file_size//length.FILE // 4
 
@@ -74,7 +79,8 @@ def upload(sock, args):
                 size += len(data)
 
             if i%length.FILE == 0:
-                print(f'{int(100 * (size+oob_size) / file_size):3d} %')
+                percent = 100 * (current_size+size+oob_size) / file_size
+                print(f'{int(percent):3d} %')
 
             i += 1
 
