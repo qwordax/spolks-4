@@ -4,7 +4,6 @@ import logging as log
 import multiprocessing as proc
 import socket
 import sys
-import time
 
 import command
 import length
@@ -20,12 +19,7 @@ N_MAX = 5
 The maximum number of processes.
 '''
 
-DELAY = 0.5
-'''
-Specifies a delay before checking process activity.
-'''
-
-def handle(sock, working):
+def handle(sock, count, status, working):
     '''
     Represents the handler of connections.
     '''
@@ -49,6 +43,7 @@ def handle(sock, working):
         except KeyboardInterrupt:
             return
 
+    status.value += 1
     log.info('%s:%d connected' % address)
 
     try:
@@ -73,10 +68,15 @@ def handle(sock, working):
                 command.download(conn, address, args)
             else:
                 command.unknown(conn, address, args)
+    except ConnectionAbortedError:
+        log.error('%s:%d connection aborted' % address)
     except ConnectionResetError:
         log.error('%s:%d connection reset' % address)
     except TimeoutError:
         log.error('%s:%d timeout expired' % address)
+
+    count.value -= 1
+    status.value -= 1
 
     log.info('%s:%d disconnected' % address)
 
@@ -107,34 +107,41 @@ def main():
     # Necessary for properly process executing.
     proc.freeze_support()
 
-    # Shared variable to indicate server working.
+    # Indicates total number of processes.
+    count = proc.Value('b', 0)
+
+    # Indicates total number of working processes.
+    status = proc.Value('b', 0)
+
+    # Indicates server working.
     working = proc.Value('b', 1)
 
     # The list of processes that handle connections.
     process_list = []
 
-    for i in range(N_MIN):
-        process_list.append(proc.Process(
-            target=handle,
-            args=(sock.dup(), working)
-        ))
-
-    for p in process_list:
-        p.start()
-        log.info('start process')
-
     try:
         while working.value:
-            time.sleep(DELAY)
+            if ((count.value < N_MIN or count.value == status.value) and
+                 count.value < N_MAX):
+                process_list.append(proc.Process(
+                    target=handle,
+                    args=(sock.dup(), count, status, working)
+                ))
+
+                process_list[-1].start()
+
+                count.value += 1
+                log.info('start process')
     except KeyboardInterrupt:
         log.critical('interrupt')
 
     # Terminating processes.
     for p in process_list:
-        p.terminate()
-        log.info('terminate process')
+        if p.is_alive():
+            p.terminate()
+            log.info('terminate process')
 
-        p.join()
+            p.join()
 
     log.info('closing . . .')
     sock.close()
