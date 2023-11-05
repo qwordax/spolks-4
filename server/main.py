@@ -39,7 +39,7 @@ def handle(sock, fatal, count, status, working):
 
                 break
         except TimeoutError:
-            log.warning('switch process')
+            log.info('switch process')
         except KeyboardInterrupt:
             return
 
