@@ -70,10 +70,13 @@ def handle(sock, fatal, count, status, working):
                 command.unknown(conn, address, args)
     except ConnectionAbortedError:
         log.error('%s:%d connection aborted' % address)
+        fatal.value = 1
     except ConnectionResetError:
         log.error('%s:%d connection reset' % address)
+        fatal.value = 1
     except TimeoutError:
         log.error('%s:%d timeout expired' % address)
+        fatal.value = 1
 
     count.value -= 1
     status.value -= 1

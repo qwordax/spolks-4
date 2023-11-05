@@ -59,8 +59,8 @@ def upload(conn, address, args, fatal):
     with filelock.FileLock('last.lock'):
         try:
             with open('last.txt', 'r') as file:
-                last_address = file.readline()
-                last_file_name = file.readline()
+                last_address = file.readline().strip()
+                last_file_name = file.readline().strip()
 
                 last_client = (last_address == address[0] and
                                last_file_name == file_name)
@@ -147,8 +147,8 @@ def download(conn, address, args, fatal):
     with filelock.FileLock('last.lock'):
         try:
             with open('last.txt', 'r') as file:
-                last_address = file.readline()
-                last_file_name = file.readline()
+                last_address = file.readline().strip()
+                last_file_name = file.readline().strip()
 
                 last_client = (last_address == address[0] and
                                last_file_name == file_name)
