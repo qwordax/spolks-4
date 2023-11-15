@@ -126,6 +126,10 @@ def download(conn, address, args, fatal):
         conn.settimeout(timeout.COMMAND_SEND)
         conn.send('ok'.encode())
 
+    # Synchronize with client.
+    conn.settimeout(timeout.COMMAND_RECV)
+    conn.recv(length.COMMAND)
+
     if not os.path.exists(args[1]):
         conn.settimeout(timeout.COMMAND_SEND)
         conn.send('not exists'.encode())
@@ -134,6 +138,10 @@ def download(conn, address, args, fatal):
     else:
         conn.settimeout(timeout.COMMAND_SEND)
         conn.send('exists'.encode())
+
+    # Synchronize with client.
+    conn.settimeout(timeout.COMMAND_RECV)
+    conn.recv(length.COMMAND)
 
     file_name = args[1]
     file_size = os.path.getsize(args[1])

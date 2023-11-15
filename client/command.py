@@ -96,11 +96,19 @@ def download(sock, args):
         print('usage: download <file>', file=sys.stderr)
         return
 
+    # Synchronize with server.
+    sock.settimeout(timeout.COMMAND_SEND)
+    sock.send('ok'.encode())
+
     sock.settimeout(timeout.COMMAND_RECV)
 
     if sock.recv(length.COMMAND).decode() == 'not exists':
         print('error: \'%s\' does not exists' % args[1], file=sys.stderr)
         return
+
+    # Synchronize with server.
+    sock.settimeout(timeout.COMMAND_SEND)
+    sock.send('ok'.encode())
 
     sock.settimeout(timeout.COMMAND_RECV)
     file_info = sock.recv(length.COMMAND).decode().split()
