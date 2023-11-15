@@ -32,8 +32,6 @@ def handle(sock, fatal, count, status, working):
     while True:
         try:
             with filelock.FileLock('accept.lock'):
-                log.info('accepting . . .')
-
                 sock.settimeout(timeout.CONNECT)
                 conn, address = sock.accept()
 
