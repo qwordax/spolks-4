@@ -14,7 +14,7 @@ N_MIN = 2
 The minimum number of processes.
 '''
 
-N_MAX = 5
+N_MAX = 3
 '''
 The maximum number of processes.
 '''
